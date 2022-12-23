@@ -513,7 +513,7 @@ func (pc *PropertyCollector) RetrievePropertiesEx(ctx *Context, r *types.Retriev
 
 	if fault != nil {
 		switch fault.(type) {
-		case *types.ManagedObjectNotFound:
+		case *types.ManagedObjectNotFound: // Terraform virtual switch creation fails here
 			body.Fault_ = Fault("The object has already been deleted or has not been completely created", fault)
 		default:
 			body.Fault_ = Fault("", fault)

@@ -23,6 +23,7 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/vmware/govmomi/object"
 	"github.com/vmware/govmomi/vim25/methods"
 	"github.com/vmware/govmomi/vim25/mo"
 	"github.com/vmware/govmomi/vim25/soap"
@@ -44,6 +45,7 @@ func vdmNames(name string) []string {
 	}
 }
 
+// govc datastore.disk.create -size 24G disks/disk1.vmdk
 func vdmCreateVirtualDisk(op types.VirtualDeviceConfigSpecFileOperation, req *types.CreateVirtualDisk_Task) types.BaseMethodFault {
 	fm := Map.FileManager()
 
@@ -218,6 +220,62 @@ func (m *VirtualDiskManager) QueryVirtualDiskUuid(ctx *Context, req *types.Query
 	}
 
 	return body
+}
+
+// TODO: deas
+func (m *VirtualDiskManager) QueryVirtualDiskInfoTask(ctx *Context, req *types.QueryVirtualDiskInfo_Task) soap.HasFault {
+	task := CreateTask(m, "queryVirtualDiskInfo", func(*Task) (types.AnyType, types.BaseMethodFault) {
+		// object.VirtualDiskInfo{ DiskType: "thin"}
+		fmt.Println(req.Name)
+		fm := ctx.Map.FileManager()
+		file, fault := fm.resolve(req.Datacenter, req.Name) // TODO: Invalid Datastore should return fault to
+		if fault != nil {
+			return nil, fault
+		}
+		// body.
+		body := new(object.ArrayOfVirtualDiskInfo) // TODO Name
+		// body.VirtualDiskInfo = []object.VirtualDiskInfo{{Name: req.Name, DiskType: "thin"}}
+		_, err := os.Stat(file)
+		if err == nil {
+			body.VirtualDiskInfo = []object.VirtualDiskInfo{{Name: req.Name, DiskType: "thin"}}
+		} else {
+			body.VirtualDiskInfo = []object.VirtualDiskInfo{}
+		}
+		return body, nil
+
+		/*
+			if fault != nil {
+				body.Fault_ = Fault("", fault)
+				return body
+			}
+		*/
+		/*
+			_, err := os.Stat(file)
+			if err != nil {
+				fault = fm.fault(req.Name, err, new(types.CannotAccessFile))
+				body.Fault_ = Fault(fmt.Sprintf("File %s was not found", req.Name), fault)
+				return body
+			}
+
+			body.Res = &types.QueryVirtualDiskUuidResponse{
+				Returnval: virtualDiskUUID(req.Datacenter, file),
+			}
+		*/
+		// return info.Result.(arrayOfVirtualDiskInfo).VirtualDiskInfo, nil
+	})
+
+	return &object.QueryVirtualDiskInfoTaskBody{
+		// Err:
+		Res: &object.QueryVirtualDiskInfoTaskResponse{
+			Returnval: task.Run(ctx),
+		},
+	}
+
+	/* return &methods.CopyVirtualDisk_TaskBody{ // TODO QueryVirtualDiskInfo_TaskResponse
+		Res: &types.CopyVirtualDisk_TaskResponse{
+			Returnval: task.Run(ctx),
+		},
+	}*/
 }
 
 func (m *VirtualDiskManager) SetVirtualDiskUuid(_ *Context, req *types.SetVirtualDiskUuid) soap.HasFault {

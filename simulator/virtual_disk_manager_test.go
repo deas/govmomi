@@ -18,6 +18,7 @@ package simulator
 
 import (
 	"context"
+	"fmt"
 	"path"
 	"strings"
 	"testing"
@@ -26,10 +27,17 @@ import (
 
 	"github.com/vmware/govmomi"
 	"github.com/vmware/govmomi/object"
+	"github.com/vmware/govmomi/vim25/debug"
 	"github.com/vmware/govmomi/vim25/types"
 )
 
 func TestVirtualDiskManager(t *testing.T) {
+	/* p := debug.FileProvider{
+		Path: t.TempDir(),
+	} */
+	p := debug.LogProvider{}
+	debug.SetProvider(&p)
+
 	ctx := context.Background()
 
 	m := ESX()
@@ -48,6 +56,7 @@ func TestVirtualDiskManager(t *testing.T) {
 	}
 
 	dm := object.NewVirtualDiskManager(c.Client)
+
 	fm := object.NewFileManager(c.Client)
 
 	spec := &types.FileBackedVirtualDiskSpec{
@@ -104,6 +113,29 @@ func TestVirtualDiskManager(t *testing.T) {
 		}
 		qname += "-enoent"
 	}
+
+	qname = name
+	for _, fail := range []bool{false, false /*, true*/} {
+		diskinfo, err := dm.QueryVirtualDiskInfo(ctx, qname, nil, false)
+		if fail {
+			if err == nil {
+				t.Error("expected error")
+			}
+		} else {
+			if err != nil {
+				t.Error(err)
+			}
+			fmt.Println(len(diskinfo))
+			// fmt.Println(diskinfo[0].Name)
+			/* _, err = uuid.Parse(id)
+			if err != nil {
+				t.Error(err)
+			}*/
+		}
+		qname += "-enoent"
+	}
+
+	dm.QueryVirtualDiskInfo(ctx, qname, nil, false)
 
 	old := name
 	name = strings.Replace(old, "disk1", "disk2", 1)

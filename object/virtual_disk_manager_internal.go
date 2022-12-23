@@ -25,44 +25,44 @@ import (
 )
 
 func init() {
-	types.Add("ArrayOfVirtualDiskInfo", reflect.TypeOf((*arrayOfVirtualDiskInfo)(nil)).Elem())
+	types.Add("ArrayOfVirtualDiskInfo", reflect.TypeOf((*ArrayOfVirtualDiskInfo)(nil)).Elem())
 
 	types.Add("VirtualDiskInfo", reflect.TypeOf((*VirtualDiskInfo)(nil)).Elem())
 }
 
-type arrayOfVirtualDiskInfo struct {
+type ArrayOfVirtualDiskInfo struct {
 	VirtualDiskInfo []VirtualDiskInfo `xml:"VirtualDiskInfo,omitempty"`
 }
 
-type queryVirtualDiskInfoTaskRequest struct {
+type QueryVirtualDiskInfoTaskRequest struct {
 	This           types.ManagedObjectReference  `xml:"_this"`
 	Name           string                        `xml:"name"`
 	Datacenter     *types.ManagedObjectReference `xml:"datacenter,omitempty"`
 	IncludeParents bool                          `xml:"includeParents"`
 }
 
-type queryVirtualDiskInfoTaskResponse struct {
+type QueryVirtualDiskInfoTaskResponse struct {
 	Returnval types.ManagedObjectReference `xml:"returnval"`
 }
 
-type queryVirtualDiskInfoTaskBody struct {
-	Req         *queryVirtualDiskInfoTaskRequest  `xml:"urn:internalvim25 QueryVirtualDiskInfo_Task,omitempty"`
-	Res         *queryVirtualDiskInfoTaskResponse `xml:"urn:vim25 QueryVirtualDiskInfo_TaskResponse,omitempty"`
-	InternalRes *queryVirtualDiskInfoTaskResponse `xml:"urn:internalvim25 QueryVirtualDiskInfo_TaskResponse,omitempty"`
+type QueryVirtualDiskInfoTaskBody struct {
+	Req         *QueryVirtualDiskInfoTaskRequest  `xml:"urn:internalvim25 QueryVirtualDiskInfo_Task,omitempty"`
+	Res         *QueryVirtualDiskInfoTaskResponse `xml:"urn:vim25 QueryVirtualDiskInfoTaskResponse,omitempty"`
+	InternalRes *QueryVirtualDiskInfoTaskResponse `xml:"urn:internalvim25 QueryVirtualDiskInfoTaskResponse,omitempty"`
 	Err         *soap.Fault                       `xml:"http://schemas.xmlsoap.org/soap/envelope/ Fault,omitempty"`
 }
 
-func (b *queryVirtualDiskInfoTaskBody) Fault() *soap.Fault { return b.Err }
+func (b *QueryVirtualDiskInfoTaskBody) Fault() *soap.Fault { return b.Err }
 
-func queryVirtualDiskInfoTask(ctx context.Context, r soap.RoundTripper, req *queryVirtualDiskInfoTaskRequest) (*queryVirtualDiskInfoTaskResponse, error) {
-	var reqBody, resBody queryVirtualDiskInfoTaskBody
+func queryVirtualDiskInfoTask(ctx context.Context, r soap.RoundTripper, req *QueryVirtualDiskInfoTaskRequest) (*QueryVirtualDiskInfoTaskResponse, error) {
+	var reqBody, resBody QueryVirtualDiskInfoTaskBody
 
 	reqBody.Req = req
 
 	if err := r.RoundTrip(ctx, &reqBody, &resBody); err != nil {
 		return nil, err
 	}
-
+	// TODO: This resBody.Res + resBody.InteralRes are nil - this blows up
 	if resBody.Res != nil {
 		return resBody.Res, nil
 	}
@@ -77,7 +77,7 @@ type VirtualDiskInfo struct {
 }
 
 func (m VirtualDiskManager) QueryVirtualDiskInfo(ctx context.Context, name string, dc *Datacenter, includeParents bool) ([]VirtualDiskInfo, error) {
-	req := queryVirtualDiskInfoTaskRequest{
+	req := QueryVirtualDiskInfoTaskRequest{
 		This:           m.Reference(),
 		Name:           name,
 		IncludeParents: includeParents,
@@ -98,7 +98,7 @@ func (m VirtualDiskManager) QueryVirtualDiskInfo(ctx context.Context, name strin
 		return nil, err
 	}
 
-	return info.Result.(arrayOfVirtualDiskInfo).VirtualDiskInfo, nil
+	return info.Result.(ArrayOfVirtualDiskInfo).VirtualDiskInfo, nil
 }
 
 type createChildDiskTaskRequest struct {

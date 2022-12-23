@@ -534,6 +534,7 @@ type VirtualDiskManagerInterface interface {
 	MoveVirtualDiskTask(*Context, *types.MoveVirtualDisk_Task) soap.HasFault
 	CopyVirtualDiskTask(*Context, *types.CopyVirtualDisk_Task) soap.HasFault
 	QueryVirtualDiskUuid(*Context, *types.QueryVirtualDiskUuid) soap.HasFault
+	QueryVirtualDiskInfoTask(*Context, *types.QueryVirtualDiskInfo_Task) soap.HasFault
 	SetVirtualDiskUuid(*Context, *types.SetVirtualDiskUuid) soap.HasFault
 }
 
